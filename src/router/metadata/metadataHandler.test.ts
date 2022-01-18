@@ -332,7 +332,7 @@ const overrideStubs = {
 };
 const registry: FHIRStructureDefinitionRegistry = new FHIRStructureDefinitionRegistry();
 
-const operationRegistryMock: OperationDefinitionRegistry = ({
+const operationRegistryMock: OperationDefinitionRegistry = {
     getCapabilities: jest.fn().mockReturnValue({
         Account: {
             operation: [
@@ -344,7 +344,7 @@ const operationRegistryMock: OperationDefinitionRegistry = ({
             ],
         },
     }),
-} as unknown) as OperationDefinitionRegistry;
+} as unknown as OperationDefinitionRegistry;
 
 describe('ERROR: test cases', () => {
     beforeEach(() => {
@@ -363,9 +363,9 @@ describe('ERROR: test cases', () => {
             await metadataHandler.capabilities({ fhirVersion: '4.0.1', mode: 'full' });
         } catch (e) {
             // CHECK
-            expect(e.name).toEqual('NotFoundError');
-            expect(e.statusCode).toEqual(404);
-            expect(e.message).toEqual(`FHIR version 4.0.1 is not supported`);
+            expect((e as any).name).toEqual('NotFoundError');
+            expect((e as any).statusCode).toEqual(404);
+            expect((e as any).message).toEqual(`FHIR version 4.0.1 is not supported`);
         }
     });
 
@@ -381,9 +381,9 @@ describe('ERROR: test cases', () => {
             await metadataHandler.capabilities({ fhirVersion: '3.0.1', mode: 'full' });
         } catch (e) {
             // CHECK
-            expect(e.name).toEqual('NotFoundError');
-            expect(e.statusCode).toEqual(404);
-            expect(e.message).toEqual(`FHIR version 3.0.1 is not supported`);
+            expect((e as any).name).toEqual('NotFoundError');
+            expect((e as any).statusCode).toEqual(404);
+            expect((e as any).message).toEqual(`FHIR version 3.0.1 is not supported`);
         }
     });
 });
@@ -596,18 +596,24 @@ test('R4: FHIR Config V4 with bulkDataAccess', async () => {
     const metadataHandler: MetadataHandler = new MetadataHandler(configHandler, registry, operationRegistryMock);
     const response = await metadataHandler.capabilities({ fhirVersion: '4.0.1', mode: 'full' });
 
-    expect(response.resource.rest[0].operation).toEqual([
-        {
-            name: 'export',
-            definition:
-                'This FHIR Operation initiates the asynchronous generation of data to which the client is authorized. Currently only system level export is supported. For more information please refer here: http://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-kick-off-request',
-        },
-        {
-            name: 'export-poll-status',
-            definition:
-                'After a bulk data request has been started, the client MAY poll the status URL provided in the Content-Location header. For more details please refer here: http://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-status-request',
-        },
-    ]);
+    expect(response.resource.rest[0].operation).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "definition": "http://hl7.org/fhir/uv/bulkdata/OperationDefinition/export",
+            "documentation": "This FHIR Operation initiates the asynchronous generation of data to which the client is authorized. For more information please refer here: http://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-kick-off-request. After a bulk data request has been started, the client MAY poll the status URL provided in the Content-Location header. For more details please refer here: http://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-status-request",
+            "name": "export",
+          },
+        ]
+    `);
+    expect(response.resource.rest[0].resource.find((r: any) => r.type === 'Group')?.operation).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "definition": "http://hl7.org/fhir/uv/bulkdata/OperationDefinition/group-export",
+            "documentation": "This FHIR Operation initiates the asynchronous generation of data for a given Group. For more information please refer here: http://hl7.org/fhir/uv/bulkdata/export/index.html#endpoint---group-of-patients. After a bulk data request has been started, the client MAY poll the status URL provided in the Content-Location header. For more details please refer here: http://hl7.org/fhir/uv/bulkdata/export/index.html#bulk-data-status-request",
+            "name": "group-export",
+          },
+        ]
+    `);
 });
 
 test('R4: FHIR Config V4 without bulkDataAccess', async () => {
@@ -616,6 +622,7 @@ test('R4: FHIR Config V4 without bulkDataAccess', async () => {
     const response = await metadataHandler.capabilities({ fhirVersion: '4.0.1', mode: 'full' });
 
     expect(response.resource.rest[0].operation).toBeUndefined();
+    expect(response.resource.rest[0].resource.find((r: any) => r.type === 'Group')?.operation).toBeUndefined();
 });
 
 test('R4: FHIR Config V4 with all Oauth Policy endpoints', async () => {
@@ -674,7 +681,7 @@ test('R4: FHIR Config V4 with all Oauth Policy endpoints', async () => {
                 coding: [
                     {
                         code: 'OAuth',
-                        system: 'http://hl7.org/fhir/ValueSet/restful-security-service',
+                        system: 'http://terminology.hl7.org/CodeSystem/restful-security-service',
                     },
                 ],
             },
@@ -723,7 +730,7 @@ test('R4: FHIR Config V4 with some Oauth Policy endpoints', async () => {
                 coding: [
                     {
                         code: 'OAuth',
-                        system: 'http://hl7.org/fhir/ValueSet/restful-security-service',
+                        system: 'http://terminology.hl7.org/CodeSystem/restful-security-service',
                     },
                 ],
             },
@@ -764,6 +771,53 @@ test('R4: FHIR Config V4 with all productInfo params', async () => {
         implementation: {
             description: 'Product Description',
             url: 'http://example.com',
+        },
+        fhirVersion: '4.0.1',
+        format: ['json'],
+        rest: response.resource.rest,
+    };
+
+    expect(response.resource).toMatchObject(expectedResponse);
+});
+
+test('R4: dynamic hostname used in implementation.url', async () => {
+    const r4ConfigWithAllProductInfo = r4FhirConfigGeneric(overrideStubs);
+    r4ConfigWithAllProductInfo.productInfo = {
+        orgName: 'Organization Name',
+        productVersion: '1.0.0',
+        productTitle: 'Product Title',
+        productMachineName: 'product.machine.name',
+        productDescription: 'Product Description',
+        productPurpose: 'Product Purpose',
+        copyright: 'Copyright',
+    };
+    const configHandler: ConfigHandler = new ConfigHandler(r4ConfigWithAllProductInfo, SUPPORTED_R4_RESOURCES);
+    configHandler.config.server.dynamicHostName = true;
+    const metadataHandler: MetadataHandler = new MetadataHandler(configHandler, registry, operationRegistryMock);
+    const response = await metadataHandler.capabilities({
+        fhirVersion: '4.0.1',
+        mode: 'full',
+        hostName: 'different.host.example.com',
+    });
+
+    const expectedResponse: any = {
+        resourceType: 'CapabilityStatement',
+        name: 'product.machine.name',
+        title: 'Product Title Capability Statement',
+        description: 'Product Description',
+        purpose: 'Product Purpose',
+        copyright: 'Copyright',
+        status: 'active',
+        date: expect.stringMatching(utcTimeRegExp),
+        publisher: 'Organization Name',
+        kind: 'instance',
+        software: {
+            name: 'Product Title',
+            version: '1.0.0',
+        },
+        implementation: {
+            description: 'Product Description',
+            url: 'http://different.host.example.com',
         },
         fhirVersion: '4.0.1',
         format: ['json'],
