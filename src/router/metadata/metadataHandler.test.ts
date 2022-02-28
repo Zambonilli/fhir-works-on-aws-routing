@@ -332,7 +332,7 @@ const overrideStubs = {
 };
 const registry: FHIRStructureDefinitionRegistry = new FHIRStructureDefinitionRegistry();
 
-const operationRegistryMock: OperationDefinitionRegistry = {
+const operationRegistryMock: OperationDefinitionRegistry = ({
     getCapabilities: jest.fn().mockReturnValue({
         Account: {
             operation: [
@@ -344,7 +344,7 @@ const operationRegistryMock: OperationDefinitionRegistry = {
             ],
         },
     }),
-} as unknown as OperationDefinitionRegistry;
+} as unknown) as OperationDefinitionRegistry;
 
 describe('ERROR: test cases', () => {
     beforeEach(() => {

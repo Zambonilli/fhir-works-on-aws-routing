@@ -12,7 +12,7 @@ import { notDeepStrictEqual } from 'assert';
 import { setServerUrlMiddleware } from './setServerUrl';
 
 async function sleep(milliseconds: number) {
-    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
 describe('createServerUrlMiddleware', () => {
@@ -26,10 +26,10 @@ describe('createServerUrlMiddleware', () => {
         const serverUrlMiddleware = setServerUrlMiddleware(fhirConfig);
 
         const nextMock = jest.fn();
-        const req = { baseUrl: '/' } as unknown as express.Request;
-        const res = {
+        const req = ({ baseUrl: '/' } as unknown) as express.Request;
+        const res = ({
             locals: {},
-        } as unknown as express.Response;
+        } as unknown) as express.Response;
 
         serverUrlMiddleware(req, res, nextMock);
         await sleep(1);
@@ -49,10 +49,10 @@ describe('createServerUrlMiddleware', () => {
         const serverUrlMiddleware = setServerUrlMiddleware(fhirConfig);
 
         const nextMock = jest.fn();
-        const req = { baseUrl: '/some/path' } as unknown as express.Request;
-        const res = {
+        const req = ({ baseUrl: '/some/path' } as unknown) as express.Request;
+        const res = ({
             locals: {},
-        } as unknown as express.Response;
+        } as unknown) as express.Response;
 
         serverUrlMiddleware(req, res, nextMock);
         await sleep(1);
@@ -73,16 +73,16 @@ describe('createServerUrlMiddleware', () => {
         const serverUrlMiddleware = setServerUrlMiddleware(fhirConfig);
 
         const sendMock = jest.fn();
-        const req = {
+        const req = ({
             baseUrl: '/',
             headers: { host: 'private.api.gateway.example.com' },
-        } as unknown as express.Request;
-        const res = {
+        } as unknown) as express.Request;
+        const res = ({
             locals: {},
             status: () => {
                 return { send: sendMock };
             },
-        } as unknown as express.Response;
+        } as unknown) as express.Response;
 
         serverUrlMiddleware(req, res, (err: unknown) => {
             expect(err).toBeUndefined();
@@ -103,16 +103,16 @@ describe('createServerUrlMiddleware', () => {
         const serverUrlMiddleware = setServerUrlMiddleware(fhirConfig);
 
         const sendMock = jest.fn();
-        const req = {
+        const req = ({
             baseUrl: '/some/path',
             headers: { host: 'private.api.gateway.example.com' },
-        } as unknown as express.Request;
-        const res = {
+        } as unknown) as express.Request;
+        const res = ({
             locals: {},
             status: () => {
                 return { send: sendMock };
             },
-        } as unknown as express.Response;
+        } as unknown) as express.Response;
 
         serverUrlMiddleware(req, res, (err: unknown) => {
             expect(err).toBeUndefined();
@@ -133,13 +133,13 @@ describe('createServerUrlMiddleware', () => {
         const serverUrlMiddleware = setServerUrlMiddleware(fhirConfig);
 
         const sendMock = jest.fn();
-        const req = { baseUrl: '/', headers: {} } as unknown as express.Request;
-        const res = {
+        const req = ({ baseUrl: '/', headers: {} } as unknown) as express.Request;
+        const res = ({
             locals: {},
             status: () => {
                 return { send: sendMock };
             },
-        } as unknown as express.Response;
+        } as unknown) as express.Response;
 
         serverUrlMiddleware(req, res, (err: unknown) => {
             expect(err).toBeUndefined();
