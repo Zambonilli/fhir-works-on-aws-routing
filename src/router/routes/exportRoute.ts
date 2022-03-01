@@ -33,7 +33,7 @@ export default class ExportRoute {
         );
         const jobId = await this.exportHandler.initiateExport(initiateExportRequest);
 
-        const exportStatusUrl = `${this.serverUrl}/$export/${jobId}`;
+        const exportStatusUrl = `${res.locals.serverUrl}/$export/${jobId}`;
         res.header('Content-Location', exportStatusUrl)
             .status(202)
             .send();
@@ -76,7 +76,7 @@ export default class ExportRoute {
                     const jsonResponse = {
                         transactionTime: response.transactionTime,
                         request: ExportRouteHelper.getExportUrl(
-                            this.serverUrl,
+                            res.locals.serverUrl,
                             response.exportType,
                             queryParams,
                             groupId,
