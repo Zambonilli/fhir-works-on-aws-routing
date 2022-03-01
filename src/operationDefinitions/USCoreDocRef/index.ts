@@ -19,9 +19,10 @@ const docRefImpl = async (
     userIdentity: KeyValueMap,
     params: DocRefParams,
     requestContext: RequestContext,
+    serverUrl: string,
 ) => {
     const searchParams = convertDocRefParamsToSearchParams(params);
-    return resourceHandler.typeSearch('DocumentReference', searchParams, userIdentity, requestContext);
+    return resourceHandler.typeSearch('DocumentReference', searchParams, userIdentity, requestContext, serverUrl);
 };
 
 export const USCoreDocRef: OperationDefinitionImplementation = {
@@ -48,6 +49,7 @@ export const USCoreDocRef: OperationDefinitionImplementation = {
                     res.locals.userIdentity,
                     parseQueryParams(req.query),
                     res.locals.requestContext,
+                    res.locals.serverUrl,
                 );
                 res.send(response);
             }),
@@ -61,6 +63,7 @@ export const USCoreDocRef: OperationDefinitionImplementation = {
                     res.locals.userIdentity,
                     parsePostParams(req.body),
                     res.locals.requestContext,
+                    res.locals.serverUrl,
                 );
                 res.send(response);
             }),
