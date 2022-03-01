@@ -140,6 +140,7 @@ export default class GenericResourceRoute {
                     searchParamQuery,
                     res.locals.userIdentity,
                     res.locals.requestContext,
+                    res.locals.serverUrl,
                 );
             };
             // SEARCH

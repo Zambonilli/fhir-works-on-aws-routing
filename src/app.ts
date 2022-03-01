@@ -25,6 +25,7 @@ import ExportRoute from './router/routes/exportRoute';
 import WellKnownUriRouteRoute from './router/routes/wellKnownUriRoute';
 import { FHIRStructureDefinitionRegistry } from './registry';
 import { initializeOperationRegistry } from './operationDefinitions';
+import { setServerUrlMiddleware } from './router/middlewares/setServerUrl';
 
 const configVersionSupported: ConfigVersion = 1;
 
@@ -74,6 +75,8 @@ export function generateServerlessRouter(
         app.use(cors(corsOptions));
         hasCORSEnabled = true;
     }
+
+    app.use(setServerUrlMiddleware(fhirConfig));
 
     // Metadata
     const metadataRoute: MetadataRoute = new MetadataRoute(

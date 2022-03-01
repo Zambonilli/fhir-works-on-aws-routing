@@ -72,6 +72,7 @@ export default class ResourceHandler implements CrudHandlerInterface {
         queryParams: any,
         userIdentity: KeyValueMap,
         requestContext: RequestContext,
+        serverUrl: string,
     ) {
         const allowedResourceTypes = await this.authService.getAllowedResourceTypesForOperation({
             operation: 'search-type',
@@ -89,12 +90,12 @@ export default class ResourceHandler implements CrudHandlerInterface {
         const searchResponse = await this.searchService.typeSearch({
             resourceType,
             queryParams,
-            baseUrl: this.serverUrl,
+            baseUrl: serverUrl,
             allowedResourceTypes,
             searchFilters,
         });
         const bundle = BundleGenerator.generateBundle(
-            this.serverUrl,
+            serverUrl,
             queryParams,
             searchResponse.result,
             'searchset',
